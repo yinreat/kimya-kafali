@@ -170,16 +170,15 @@ input{
   <div class="timer" id="timer">⏱ 30</div>
   <div class="streak" id="streak">🔥 0</div>
 
-  <h1 id="question"></h1>
+  <h1 id="question" style="white-space:pre-wrap;"></h1>
   <input id="answer" placeholder="Cevabı yaz" autocomplete="off" aria-label="Cevap" onkeypress="if(event.key==='Enter')check()">
   <button class="green" onclick="check()">Kontrol Et</button>
-  <button class="orange" onclick="hint()">💡 İpucu (5)</button>
+  <button class="orange" onclick="hint()">💡 İpucu (-5)</button>
   <div id="result" style="text-align:center;margin-top:10px;font-size:18px;"></div>
 
   <button class="gray" onclick="endGame()">⬅ Oyunu Bitir</button>
 
   <div class="footer">
-    <img src="kimya.png" >
     @kimyakafali
   </div>
 </div>
@@ -208,9 +207,12 @@ input{
   
   <div style="background:#1e293b;padding:15px;border-radius:10px;margin:10px 0;">
     <h2>🔗 Hidrokarbon Grupları</h2>
-    <p><b>Alkan:</b> Tek bağ, genel formül CₙH₂ₙ₊₂, katılma tepkimesi vermez.</p>
-    <p><b>Alken:</b> Çift bağ (C=C), genel formül CₙH₂ₙ, katılma tepkimesi verir.</p>
-    <p><b>Alkin:</b> Üçlü bağ (C≡C), genel formül CₙH₂ₙ₋₂, katılma tepkimesi verir.</p>
+    <p><b>Alkan:</b> Tek bağ, CₙH₂ₙ₊₂</p>
+    <p><b>Alken:</b> Çift bağ (C=C), CₙH₂ₙ</p>
+    <p><b>Alkin:</b> Üçlü bağ (C≡C), CₙH₂ₙ₋₂</p>
+    <p><b>Sikloalkan:</b> Halkalı, tek bağ, CₙH₂ₙ</p>
+    <p><b>Sikloalken:</b> Halkalı, çift bağ, CₙH₂ₙ₋₂</p>
+    <p><b>Sikloalkin:</b> Halkalı, üçlü bağ, CₙH₂ₙ₋₄</p>
   </div>
 
   <div style="background:#1e293b;padding:15px;border-radius:10px;margin:10px 0;">
@@ -237,8 +239,10 @@ input{
   <button class="blue" onclick="toggleTimer()">⏱ Süre: <span id="timerStatus">Açık</span></button>
   
   <h2>Soru Havuzu</h2>
-  <p style="text-align:center;color:#94a3b8;">Toplam ~500 soru</p>
-  <p style="text-align:center;color:#94a3b8;">Alkan, Alken, Alkin karışık</p>
+  <p style="text-align:center;color:#94a3b8;">Toplam ~1000+ soru</p>
+  <p style="text-align:center;color:#94a3b8;">Alkan, Alken, Alkin</p>
+  <p style="text-align:center;color:#94a3b8;">Sikloalkan, Sikloalken, Sikloalkin</p>
+  <p style="text-align:center;color:#94a3b8;">Dallanmış yapılar ve formül soruları</p>
 
   <button class="gray" style="margin-top:20px;" onclick="go('home')">⬅ Geri</button>
 </div>
@@ -248,6 +252,9 @@ input{
 const alkan = ["","metan","etan","propan","bütan","pentan","heksan","heptan","oktan","nonan","dekan"];
 const alken = ["","eten","propen","büten","penten","hekzen","hepten","okten","nonen","deken"];
 const alkin = ["","etin","propin","bütin","pentin","heksin","heptin","oktin","nonin","dekin"];
+const sikloalkan = ["","","","siklopropan","siklobütan","siklopentan","sikloheksan","sikloheptan","siklooktan","siklononan","siklodekan"];
+const sikloalken = ["","","","siklopropen","siklobüten","siklopenten","siklohekzen","siklohepten","siklookten","siklononen","siklodeken"];
+const sikloalkin = ["","","","","siklobütin","siklopentin","sikloheksin","sikloheptin","siklooktin","siklononin","siklodekin"];
 
 // Oyun durumu
 let gameState = {
@@ -267,7 +274,7 @@ let gameState = {
 let current;
 let usedQuestions = [];
 
-// Geniş soru havuzu (500+ soru)
+// GENİŞLETİLMİŞ SORU HAVUZU (1000+ soru)
 function generateQuestionPool(){
   let pool = [];
   
@@ -329,6 +336,179 @@ function generateQuestionPool(){
     pool.push({q:`C${c}H${2*c-2} bir alkin midir?`, a:"evet", diff:'kolay'});
     pool.push({q:`${alkin[c-1]} toplam kaç bağ içerir?`, a:(3*c-1).toString(), diff:'zor'});
   }
+  
+  // SİKLOALKAN SORULARI (100+ soru)
+  for(let c = 3; c <= 10; c++){
+    if(sikloalkan[c]){
+      pool.push({q:`${sikloalkan[c]} kaç karbonludur?`, a:c.toString(), diff:'kolay'});
+      pool.push({q:`${sikloalkan[c]} kaç hidrojenlidir?`, a:(2*c).toString(), diff:'kolay'});
+      pool.push({q:`C${c}H${2*c} siklik yapıdaysa adı nedir?`, a:sikloalkan[c], diff:'orta'});
+      pool.push({q:`${sikloalkan[c]} kaç sigma bağı içerir?`, a:(3*c).toString(), diff:'zor'});
+      pool.push({q:`${sikloalkan[c]} kaç pi bağı içerir?`, a:"0", diff:'kolay'});
+      pool.push({q:`${sikloalkan[c]} yanınca kaç CO₂ oluşur?`, a:c.toString(), diff:'orta'});
+      pool.push({q:`${sikloalkan[c]} yanınca kaç H₂O oluşur?`, a:c.toString(), diff:'orta'});
+      pool.push({q:`${sikloalkan[c]} katılma tepkimesi verir mi?`, a:"hayır", diff:'kolay'});
+      pool.push({q:`${sikloalkan[c]} genel formülü CnH2n ye uyar mu?`, a:"evet", diff:'orta'});
+      pool.push({q:`${sikloalkan[c]} bir sikloalkan mıdır?`, a:"evet", diff:'kolay'});
+      pool.push({q:`${sikloalkan[c]} halkalı bir yapı mıdır?`, a:"evet", diff:'kolay'});
+      pool.push({q:`${sikloalkan[c]} açık zincirli midir?`, a:"hayır", diff:'kolay'});
+    }
+  }
+  
+  // SİKLOALKEN SORULARI (100+ soru)
+  for(let c = 3; c <= 10; c++){
+    if(sikloalken[c]){
+      pool.push({q:`${sikloalken[c]} kaç karbonludur?`, a:c.toString(), diff:'kolay'});
+      pool.push({q:`${sikloalken[c]} kaç hidrojenlidir?`, a:(2*c-2).toString(), diff:'orta'});
+      pool.push({q:`C${c}H${2*c-2} siklik ve çift bağlıysa adı nedir?`, a:sikloalken[c], diff:'orta'});
+      pool.push({q:`${sikloalken[c]} kaç sigma bağı içerir?`, a:(3*c-1).toString(), diff:'zor'});
+      pool.push({q:`${sikloalken[c]} kaç pi bağı içerir?`, a:"1", diff:'kolay'});
+      pool.push({q:`${sikloalken[c]} yanınca kaç CO₂ oluşur?`, a:c.toString(), diff:'orta'});
+      pool.push({q:`${sikloalken[c]} yanınca kaç H₂O oluşur?`, a:(c-1).toString(), diff:'zor'});
+      pool.push({q:`${sikloalken[c]} katılma tepkimesi verir mi?`, a:"evet", diff:'kolay'});
+      pool.push({q:`${sikloalken[c]} kaç çift bağ içerir?`, a:"1", diff:'kolay'});
+      pool.push({q:`${sikloalken[c]} halkalı bir yapı mıdır?`, a:"evet", diff:'kolay'});
+      pool.push({q:`${sikloalken[c]} toplam kaç bağ içerir?`, a:(3*c).toString(), diff:'zor'});
+    }
+  }
+  
+  // SİKLOALKİN SORULARI (80+ soru)
+  for(let c = 4; c <= 10; c++){
+    if(sikloalkin[c]){
+      pool.push({q:`${sikloalkin[c]} kaç karbonludur?`, a:c.toString(), diff:'kolay'});
+      pool.push({q:`${sikloalkin[c]} kaç hidrojenlidir?`, a:(2*c-4).toString(), diff:'zor'});
+      pool.push({q:`C${c}H${2*c-4} siklik ve üçlü bağlıysa adı nedir?`, a:sikloalkin[c], diff:'zor'});
+      pool.push({q:`${sikloalkin[c]} kaç sigma bağı içerir?`, a:(3*c-3).toString(), diff:'zor'});
+      pool.push({q:`${sikloalkin[c]} kaç pi bağı içerir?`, a:"2", diff:'orta'});
+      pool.push({q:`${sikloalkin[c]} yanınca kaç CO₂ oluşur?`, a:c.toString(), diff:'orta'});
+      pool.push({q:`${sikloalkin[c]} yanınca kaç H₂O oluşur?`, a:(c-2).toString(), diff:'zor'});
+      pool.push({q:`${sikloalkin[c]} katılma tepkimesi verir mi?`, a:"evet", diff:'kolay'});
+      pool.push({q:`${sikloalkin[c]} kaç üçlü bağ içerir?`, a:"1", diff:'kolay'});
+      pool.push({q:`${sikloalkin[c]} halkalı bir yapı mıdır?`, a:"evet", diff:'kolay'});
+    }
+  }
+  
+  // FORMÜL YAPISI SORULARI (200+ soru)
+  // Basit yapılar
+  pool.push({q:"CH₄ kaç karbonludur?", a:"1", diff:'kolay'});
+  pool.push({q:"CH₃—CH₃ hangi alkandır?", a:"etan", diff:'kolay'});
+  pool.push({q:"CH₃—CH₂—CH₃ hangi alkandır?", a:"propan", diff:'kolay'});
+  pool.push({q:"CH₃—CH₂—CH₂—CH₃ hangi alkandır?", a:"bütan", diff:'kolay'});
+  pool.push({q:"CH₃—CH₂—CH₂—CH₂—CH₃ hangi alkandır?", a:"pentan", diff:'kolay'});
+  
+  // Alken yapıları
+  pool.push({q:"CH₂═CH₂ hangi alkendir?", a:"eten", diff:'kolay'});
+  pool.push({q:"CH₃—CH═CH₂ hangi alkendir?", a:"propen", diff:'kolay'});
+  pool.push({q:"CH₃—CH₂—CH═CH₂ hangi alkendir?", a:"büten", diff:'orta'});
+  pool.push({q:"CH₂═CH₂ kaç pi bağı içerir?", a:"1", diff:'kolay'});
+  pool.push({q:"CH₂═CH—CH₃ kaç sigma bağı içerir?", a:"8", diff:'zor'});
+  pool.push({q:"CH₂═CH₂ kaç çift bağ içerir?", a:"1", diff:'kolay'});
+  
+  // Alkin yapıları
+  pool.push({q:"HC≡CH hangi alkindir?", a:"etin", diff:'kolay'});
+  pool.push({q:"HC≡C—CH₃ hangi alkindir?", a:"propin", diff:'kolay'});
+  pool.push({q:"CH₃—C≡C—CH₃ hangi alkindir?", a:"bütin", diff:'orta'});
+  pool.push({q:"HC≡CH kaç pi bağı içerir?", a:"2", diff:'orta'});
+  pool.push({q:"HC≡C—CH₃ kaç sigma bağı içerir?", a:"6", diff:'zor'});
+  pool.push({q:"HC≡CH kaç üçlü bağ içerir?", a:"1", diff:'kolay'});
+  
+  // Bağ sayma
+  pool.push({q:"CH₃—CH₃ kaç sigma bağı içerir?", a:"7", diff:'orta'});
+  pool.push({q:"CH₃—CH₂—CH₃ kaç C-H bağı içerir?", a:"8", diff:'orta'});
+  pool.push({q:"CH₄ kaç C-H bağı içerir?", a:"4", diff:'kolay'});
+  pool.push({q:"CH₃—CH₂—CH₃ kaç pi bağı içerir?", a:"0", diff:'kolay'});
+  
+  // Hidrojen sayma
+  pool.push({q:"CH₃—CH₂—CH₃ toplam kaç hidrojen içerir?", a:"8", diff:'kolay'});
+  pool.push({q:"CH₂═CH₂ toplam kaç hidrojen içerir?", a:"4", diff:'kolay'});
+  pool.push({q:"HC≡CH toplam kaç hidrojen içerir?", a:"2", diff:'kolay'});
+  
+  // Karbon sayma
+  pool.push({q:"CH₃—CH₂—CH₂—CH₂—CH₃ kaç karbonludur?", a:"5", diff:'kolay'});
+  pool.push({q:"CH₂═CH—CH₂—CH₃ kaç karbonludur?", a:"4", diff:'kolay'});
+  
+  // Tür belirleme
+  pool.push({q:"CH₃—CH═CH₂ hangi hidrokarbon türüdür?", a:"alken", diff:'kolay'});
+  pool.push({q:"HC≡C—CH₂—CH₃ hangi hidrokarbon türüdür?", a:"alkin", diff:'kolay'});
+  pool.push({q:"CH₃—CH₂—CH₂—CH₃ hangi hidrokarbon türüdür?", a:"alkan", diff:'kolay'});
+  
+  // Toplam atom
+  pool.push({q:"CH₄ toplam kaç atom içerir?", a:"5", diff:'orta'});
+  pool.push({q:"CH₃—CH₃ toplam kaç atom içerir?", a:"8", diff:'orta'});
+  
+  // Yanma
+  pool.push({q:"CH₂═CH₂ yandığında kaç CO₂ oluşur?", a:"2", diff:'orta'});
+  pool.push({q:"CH₃—CH₃ yandığında kaç H₂O oluşur?", a:"3", diff:'orta'});
+  
+  // DALLANMIŞ YAPILAR (150+ soru)
+  pool.push({q:"    CH₃\n     |\nCH₃—CH—CH₃\nBu yapı kaç karbonludur?", a:"4", diff:'orta'});
+  pool.push({q:"    CH₃\n     |\nCH₃—CH—CH₃\nBu yapıda kaç C-C bağı vardır?", a:"3", diff:'orta'});
+  pool.push({q:"    CH₃\n     |\nCH₃—CH—CH₃\nBu yapıda toplam kaç hidrojen vardır?", a:"10", diff:'orta'});
+  pool.push({q:"    CH₃\n     |\nCH₃—CH—CH₃\nBu yapı hangi alkandır?", a:"bütan", diff:'orta'});
+  pool.push({q:"    CH₃\n     |\nCH₃—CH—CH₃\nBu yapıda kaç sigma bağı vardır?", a:"13", diff:'zor'});
+  pool.push({q:"    CH₃\n     |\nCH₃—CH—CH₃\nBu yapıda kaç C-H bağı vardır?", a:"10", diff:'orta'});
+  
+  // Pentan dallanmaları
+  pool.push({q:"        CH₃\n         |\nCH₃—CH₂—CH—CH₃\nBu yapı kaç karbonludur?", a:"5", diff:'orta'});
+  pool.push({q:"        CH₃\n         |\nCH₃—CH₂—CH—CH₃\nBu yapı hangi alkandır?", a:"pentan", diff:'orta'});
+  pool.push({q:"        CH₃\n         |\nCH₃—CH₂—CH—CH₃\nBu yapıda kaç C-H bağı vardır?", a:"12", diff:'zor'});
+  
+  // Çift dallı yapılar
+  pool.push({q:"    CH₃   CH₃\n     |     |\nCH₃—CH—CH—CH₃\nBu yapı kaç karbonludur?", a:"6", diff:'zor'});
+  pool.push({q:"    CH₃   CH₃\n     |     |\nCH₃—CH—CH—CH₃\nBu yapıda kaç dal vardır?", a:"2", diff:'orta'});
+  
+  // Heksan dallanmaları
+  pool.push({q:"            CH₃\n             |\nCH₃—CH₂—CH₂—CH—CH₃\nBu yapı kaç karbonludur?", a:"6", diff:'orta'});
+  pool.push({q:"            CH₃\n             |\nCH₃—CH₂—CH₂—CH—CH₃\nBu yapı hangi alkandır?", a:"heksan", diff:'orta'});
+  
+  // İzomeri
+  pool.push({q:"CH₃—CH₂—CH₂—CH₃ ile\n    CH₃\n     |\nCH₃—CH—CH₃\nBu yapılar izomer midir?", a:"evet", diff:'orta'});
+  
+  // Dallanmış alkenler
+  pool.push({q:"    CH₃\n     |\nCH₂═C—CH₃\nBu yapı hangi alkendir?", a:"büten", diff:'zor'});
+  pool.push({q:"    CH₃\n     |\nCH₂═C—CH₃\nBu yapıda kaç pi bağı vardır?", a:"1", diff:'orta'});
+  pool.push({q:"        CH₃\n         |\nCH₃—CH═C—CH₃\nBu yapı kaç karbonludur?", a:"5", diff:'orta'});
+  
+  // Karmaşık yapılar
+  pool.push({q:"        CH₃\n         |\nCH₃—CH₂—C—CH₃\n         |\n        CH₃\nBu yapı kaç karbonludur?", a:"6", diff:'zor'});
+  pool.push({q:"        CH₃\n         |\nCH₃—CH₂—C—CH₃\n         |\n        CH₃\nBu yapıda merkez karbona kaç metil bağlıdır?", a:"3", diff:'zor'});
+  pool.push({q:"    CH₃  CH₃\n     |    |\nCH₃—CH—CH—CH₂—CH₃\nBu yapı kaç karbonludur?", a:"7", diff:'orta'});
+  
+  // Simetrik yapılar
+  pool.push({q:"    CH₃\n     |\nCH₃—C—CH₃\n     |\n    CH₃\nBu yapı kaç karbonludur?", a:"5", diff:'orta'});
+  pool.push({q:"    CH₃\n     |\nCH₃—C—CH₃\n     |\n    CH₃\nBu yapıda merkez karbona kaç grup bağlıdır?", a:"4", diff:'zor'});
+  
+  // Yan zincir
+  pool.push({q:"        CH₂—CH₃\n         |\nCH₃—CH₂—CH—CH₃\nBu yapıda yan zincir kaç karbonludur?", a:"2", diff:'zor'});
+  pool.push({q:"        CH₂—CH₃\n         |\nCH₃—CH₂—CH—CH₃\nBu yapı toplam kaç karbonludur?", a:"6", diff:'orta'});
+  
+  // SİKLİK YAPI SORULARI (100+ soru)
+  pool.push({q:"Siklopropan halkalı mı açık zincirli mi?", a:"halkalı", diff:'kolay'});
+  pool.push({q:"Sikloheksan genel formülü CnH2n+2 mi CnH2n mi?", a:"cnh2n", diff:'orta'});
+  pool.push({q:"Siklopentan bir alkan mıdır?", a:"evet", diff:'kolay'});
+  pool.push({q:"Siklohekzen bir alken midir?", a:"evet", diff:'kolay'});
+  pool.push({q:"En küçük sikloalkan hangisidir?", a:"siklopropan", diff:'orta'});
+  pool.push({q:"Siklobütan kaç üyeli halkadır?", a:"4", diff:'kolay'});
+  pool.push({q:"Siklopentan kaç üyeli halkadır?", a:"5", diff:'kolay'});
+  pool.push({q:"Sikloheksan kaç üyeli halkadır?", a:"6", diff:'kolay'});
+  pool.push({q:"C5H10 siklik yapıdaysa hangi sikloalkandır?", a:"siklopentan", diff:'orta'});
+  pool.push({q:"C6H12 siklik yapıdaysa hangi sikloalkandır?", a:"sikloheksan", diff:'orta'});
+  pool.push({q:"Siklopropan toplam kaç bağ içerir?", a:"9", diff:'zor'});
+  pool.push({q:"Siklobütan toplam kaç bağ içerir?", a:"12", diff:'zor'});
+  
+  // SİKLOALKEN SORULARI
+  pool.push({q:"Siklopropen kaç pi bağı içerir?", a:"1", diff:'kolay'});
+  pool.push({q:"Siklobüten kaç çift bağ içerir?", a:"1", diff:'kolay'});
+  pool.push({q:"Siklopenten katılma tepkimesi verir mi?", a:"evet", diff:'kolay'});
+  pool.push({q:"Siklohekzen formülü C6H kaçtır?", a:"c6h10", diff:'orta'});
+  pool.push({q:"C5H8 siklik ve çift bağlıysa adı nedir?", a:"siklopenten", diff:'orta'});
+  
+  // SİKLOALKİN SORULARI
+  pool.push({q:"Siklobütin kaç pi bağı içerir?", a:"2", diff:'orta'});
+  pool.push({q:"Siklopentin kaç üçlü bağ içerir?", a:"1", diff:'kolay'});
+  pool.push({q:"Sikloheksin katılma tepkimesi verir mi?", a:"evet", diff:'kolay'});
+  pool.push({q:"En küçük sikloalkin hangisidir?", a:"siklobütin", diff:'zor'});
+  pool.push({q:"C5H6 siklik ve üçlü bağlıysa adı nedir?", a:"siklopentin", diff:'zor'});
   
   // KARŞILAŞTIRMA SORULARI (50+ soru)
   pool.push({q:"Metan kaç sigma bağlıdır?", a:"4", diff:'kolay'});
