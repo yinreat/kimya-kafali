@@ -508,16 +508,27 @@ textarea{
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getDatabase, ref, set, get, push, remove, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-// Firebase yapılandırması - BURAYA KENDİ FIREBASE BİLGİLERİNİZİ YAZIN
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDRkoDX-DPq37CAH0LhCFxltNLJ9_Br1eo",
+  authDomain: "mesut-6b875.firebaseapp.com",
+  projectId: "mesut-6b875",
+  storageBucket: "mesut-6b875.firebasestorage.app",
+  messagingSenderId: "313346665608",
+  appId: "1:313346665608:web:97d5e16fa00463ae50433d",
+  measurementId: "G-PP5FQN9SG1"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
 // Firebase başlat
 const app = initializeApp(firebaseConfig);
