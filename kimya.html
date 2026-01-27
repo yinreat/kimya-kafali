@@ -147,17 +147,19 @@ textarea{
   font-size:14px;
 }
 .admin-btn{
-  position:fixed;
-  top:10px;
-  right:10px;
-  padding:8px 16px;
+  width:100%;
+  padding:12px;
+  margin-top:10px;
   background:#a855f7;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   color:white;
   cursor:pointer;
-  font-size:14px;
-  z-index:1000;
+  font-size:16px;
+  transition:transform 0.1s;
+}
+.admin-btn:active{
+  transform:scale(0.98);
 }
 .form-group{
   margin:15px 0;
@@ -208,8 +210,6 @@ textarea{
 </head>
 <body>
 
-<button class="admin-btn" onclick="showAdminLogin()">👨‍💼 Admin</button>
-
 <!-- GİRİŞ -->
 <div class="screen active" id="home">
   <h1>🧠 KimyaKafalı</h1>
@@ -235,6 +235,8 @@ textarea{
   <button class="gray" onclick="go('stats')">📊 İstatistikler</button>
   <button class="gray" onclick="go('info')">ℹ Bilgi</button>
   <button class="gray" onclick="go('settings')">⚙ Ayarlar</button>
+  
+  <button class="admin-btn" onclick="showAdminLogin()">👨‍💼 Admin Girişi</button>
 
   <div class="footer">
     YİNREAT
@@ -337,7 +339,8 @@ textarea{
 <div class="screen" id="adminLogin">
   <h1>🔐 Admin Girişi</h1>
   <div class="stats">
-    <input type="password" id="adminPassword" placeholder="Admin Şifresi" onkeypress="if(event.key==='Enter')adminLogin()">
+    <input type="email" id="adminEmail" placeholder="E-posta (admin@kimya.com)" value="admin@kimya.com">
+    <input type="password" id="adminPassword" placeholder="Şifre" onkeypress="if(event.key==='Enter')adminLogin()">
     <button class="purple" onclick="adminLogin()">Giriş Yap</button>
     <div id="loginError" style="margin-top:10px;"></div>
   </div>
@@ -507,18 +510,13 @@ textarea{
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getDatabase, ref, set, get, push, remove, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase yapılandırması
 const firebaseConfig = {
   apiKey: "AIzaSyDRkoDX-DPq37CAH0LhCFxltNLJ9_Br1eo",
   authDomain: "mesut-6b875.firebaseapp.com",
+  databaseURL: "https://mesut-6b875-default-rtdb.firebaseio.com",
   projectId: "mesut-6b875",
   storageBucket: "mesut-6b875.firebasestorage.app",
   messagingSenderId: "313346665608",
@@ -526,30 +524,45 @@ const firebaseConfig = {
   measurementId: "G-PP5FQN9SG1"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
 // Firebase başlat
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
+const auth = getAuth(app);
 
 // Global değişkenler
 window.firebaseDB = database;
+window.firebaseAuth = auth;
 window.firebaseRef = ref;
 window.firebaseSet = set;
 window.firebaseGet = get;
 window.firebasePush = push;
 window.firebaseRemove = remove;
 window.firebaseOnValue = onValue;
+window.firebaseSignIn = signInWithEmailAndPassword;
+window.firebaseSignOut = signOut;
+window.firebaseAuthState = onAuthStateChanged;
+
+console.log('Firebase başlatıldı');
+
+// Auth state değişikliklerini dinle
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log('Kullanıcı giriş yaptı:', user.email);
+    if (typeof window.onAuthSuccess === 'function') {
+      window.onAuthSuccess(user);
+    }
+  } else {
+    console.log('Kullanıcı çıkış yaptı');
+  }
+});
 
 // Soruları yükle
-loadQuestionsFromFirebase();
+window.loadQuestionsFromFirebase();
 
 </script>
 
 <script>
-// Admin şifresi - Güvenlik için değiştirin
+// Admin şifresi
 const ADMIN_PASSWORD = "kimya2024";
 
 // Veri yapıları
@@ -583,7 +596,7 @@ let firebaseQuestions = [];
 let currentEditingQuestionId = null;
 
 // Firebase'den soruları yükle
-async function loadQuestionsFromFirebase() {
+window.loadQuestionsFromFirebase = async function() {
   try {
     const questionsRef = window.firebaseRef(window.firebaseDB, 'questions');
     const snapshot = await window.firebaseGet(questionsRef);
@@ -650,582 +663,47 @@ function showAdminLogin() {
   }
 }
 
-function adminLogin() {
+async function adminLogin() {
+  const email = document.getElementById('adminEmail').value.trim();
   const password = document.getElementById('adminPassword').value;
   const errorDiv = document.getElementById('loginError');
   
-  if (password === ADMIN_PASSWORD) {
+  if (!email || !password) {
+    errorDiv.innerHTML = '<div class="error-msg">❌ E-posta ve şifre gereklidir!</div>';
+    return;
+  }
+  
+  errorDiv.innerHTML = '<div class="loading">Giriş yapılıyor...</div>';
+  
+  try {
+    const userCredential = await window.firebaseSignIn(window.firebaseAuth, email, password);
+    const user = userCredential.user;
+    
     gameState.isAdmin = true;
     sessionStorage.setItem('isAdmin', 'true');
+    sessionStorage.setItem('adminEmail', user.email);
+    
     go('adminPanel');
     updateAdminStats();
+    
+    document.getElementById('adminEmail').value = 'admin@kimya.com';
     document.getElementById('adminPassword').value = '';
     errorDiv.innerHTML = '';
-  } else {
-    errorDiv.innerHTML = '<div class="error-msg">❌ Yanlış şifre!</div>';
-  }
-}
-
-function adminLogout() {
-  gameState.isAdmin = false;
-  sessionStorage.removeItem('isAdmin');
-  go('home');
-}
-
-// Admin panel istatistikleri
-function updateAdminStats() {
-  const total = questionPool.length;
-  const urlQuestions = questionPool.filter(q => q.type === 'url' || q.url).length;
-  const normalQuestions = total - urlQuestions;
-  
-  document.getElementById('adminTotalQuestions').innerText = total;
-  document.getElementById('adminUrlQuestions').innerText = urlQuestions;
-  document.getElementById('adminNormalQuestions').innerText = normalQuestions;
-}
-
-// URL alanını göster/gizle
-function toggleUrlField() {
-  const type = document.querySelector('input[name="questionType"]:checked').value;
-  document.getElementById('urlField').style.display = type === 'url' ? 'block' : 'none';
-}
-
-function toggleEditUrlField() {
-  const type = document.querySelector('input[name="editQuestionType"]:checked').value;
-  document.getElementById('editUrlField').style.display = type === 'url' ? 'block' : 'none';
-}
-
-// Yeni soru ekleme
-async function addNewQuestion() {
-  const text = document.getElementById('newQuestionText').value.trim();
-  const answer = document.getElementById('newQuestionAnswer').value.trim();
-  const difficulty = document.querySelector('input[name="difficulty"]:checked').value;
-  const type = document.querySelector('input[name="questionType"]:checked').value;
-  const url = type === 'url' ? document.getElementById('newQuestionUrl').value.trim() : '';
-  const messageDiv = document.getElementById('addQuestionMessage');
-  
-  if (!text || !answer) {
-    messageDiv.innerHTML = '<div class="error-msg">❌ Soru ve cevap alanları zorunludur!</div>';
-    return;
-  }
-  
-  if (type === 'url' && !url) {
-    messageDiv.innerHTML = '<div class="error-msg">❌ URL'li soru için resim URL'si gereklidir!</div>';
-    return;
-  }
-  
-  try {
-    const questionsRef = window.firebaseRef(window.firebaseDB, 'questions');
-    const newQuestionRef = window.firebasePush(questionsRef);
     
-    const questionData = {
-      q: text,
-      a: answer,
-      diff: difficulty,
-      type: type,
-      createdAt: new Date().toISOString()
-    };
-    
-    if (url) {
-      questionData.url = url;
-    }
-    
-    await window.firebaseSet(newQuestionRef, questionData);
-    
-    messageDiv.innerHTML = '<div class="success-msg">✅ Soru başarıyla eklendi!</div>';
-    
-    // Formu temizle
-    document.getElementById('newQuestionText').value = '';
-    document.getElementById('newQuestionAnswer').value = '';
-    document.getElementById('newQuestionUrl').value = '';
-    document.querySelector('input[name="difficulty"][value="kolay"]').checked = true;
-    document.querySelector('input[name="questionType"][value="normal"]').checked = true;
-    toggleUrlField();
-    
-    // Soruları yeniden yükle
-    await loadQuestionsFromFirebase();
-    updateAdminStats();
-    
-    setTimeout(() => {
-      messageDiv.innerHTML = '';
-    }, 3000);
+    console.log('Admin girişi başarılı:', user.email);
     
   } catch (error) {
-    console.error('Soru eklenirken hata:', error);
-    messageDiv.innerHTML = '<div class="error-msg">❌ Soru eklenirken bir hata oluştu!</div>';
-  }
-}
-
-// Soruları filtreleme
-function filterQuestions() {
-  const filter = document.getElementById('questionFilter').value;
-  displayQuestions(filter);
-}
-
-// Soruları listeleme
-async function displayQuestions(filter = 'all') {
-  const listDiv = document.getElementById('questionsList');
-  listDiv.innerHTML = '<div class="loading">Yükleniyor...</div>';
-  
-  try {
-    const questionsRef = window.firebaseRef(window.firebaseDB, 'questions');
-    const snapshot = await window.firebaseGet(questionsRef);
+    console.error('Giriş hatası:', error);
+    let message = '❌ Giriş başarısız!';
     
-    if (!snapshot.exists()) {
-      listDiv.innerHTML = '<p style="text-align:center;color:#94a3b8;">Henüz soru eklenmemiş</p>';
-      return;
+    if (error.code === 'auth/invalid-credential') {
+      message = '❌ E-posta veya şifre hatalı!';
+    } else if (error.code === 'auth/user-not-found') {
+      message = '❌ Kullanıcı bulunamadı!';
+    } else if (error.code === 'auth/wrong-password') {
+      message = '❌ Şifre hatalı!';
+    } else if (error.code === 'auth/too-many-requests') {
+      message = '❌ Çok fazla deneme! Lütfen daha sonra tekrar deneyin.';
     }
     
-    const data = snapshot.val();
-    let questions = Object.keys(data).map(key => ({
-      id: key,
-      ...data[key]
-    }));
-    
-    // Filtreleme
-    if (filter !== 'all') {
-      if (filter === 'normal' || filter === 'url') {
-        questions = questions.filter(q => q.type === filter);
-      } else {
-        questions = questions.filter(q => q.diff === filter);
-      }
-    }
-    
-    if (questions.length === 0) {
-      listDiv.innerHTML = '<p style="text-align:center;color:#94a3b8;">Bu filtre için soru bulunamadı</p>';
-      return;
-    }
-    
-    let html = '';
-    questions.forEach(q => {
-      const diffBadge = q.diff === 'kolay' ? 'easy' : q.diff === 'orta' ? 'medium' : 'hard';
-      const typeIcon = q.type === 'url' ? '🖼️' : '📝';
-      
-      html += `
-        <div class="question-item">
-          <div style="margin-bottom:8px;">
-            <span class="difficulty-badge ${diffBadge}">${q.diff}</span>
-            <span style="margin-left:5px;">${typeIcon}</span>
-          </div>
-          <div style="color:#e5e7eb;margin-bottom:5px;"><b>Soru:</b> ${q.q}</div>
-          <div style="color:#94a3b8;font-size:14px;"><b>Cevap:</b> ${q.a}</div>
-          ${q.url ? `<div style="color:#94a3b8;font-size:12px;margin-top:5px;">🔗 ${q.url}</div>` : ''}
-          <div class="question-actions">
-            <button class="blue" onclick="editQuestionForm('${q.id}')">✏️ Düzenle</button>
-            <button class="red" onclick="deleteQuestion('${q.id}')">🗑️ Sil</button>
-          </div>
-        </div>
-      `;
-    });
-    
-    listDiv.innerHTML = html;
-    
-  } catch (error) {
-    console.error('Sorular yüklenirken hata:', error);
-    listDiv.innerHTML = '<div class="error-msg">❌ Sorular yüklenirken bir hata oluştu!</div>';
-  }
-}
-
-// Soru düzenleme formu
-async function editQuestionForm(questionId) {
-  try {
-    const questionRef = window.firebaseRef(window.firebaseDB, `questions/${questionId}`);
-    const snapshot = await window.firebaseGet(questionRef);
-    
-    if (!snapshot.exists()) {
-      alert('Soru bulunamadı!');
-      return;
-    }
-    
-    const question = snapshot.val();
-    currentEditingQuestionId = questionId;
-    
-    document.getElementById('editQuestionText').value = question.q;
-    document.getElementById('editQuestionAnswer').value = question.a;
-    document.querySelector(`input[name="editDifficulty"][value="${question.diff}"]`).checked = true;
-    document.querySelector(`input[name="editQuestionType"][value="${question.type || 'normal'}"]`).checked = true;
-    
-    if (question.url) {
-      document.getElementById('editQuestionUrl').value = question.url;
-    }
-    
-    toggleEditUrlField();
-    go('editQuestion');
-    
-  } catch (error) {
-    console.error('Soru yüklenirken hata:', error);
-    alert('Soru yüklenirken bir hata oluştu!');
-  }
-}
-
-// Soru güncelleme
-async function updateQuestion() {
-  if (!currentEditingQuestionId) return;
-  
-  const text = document.getElementById('editQuestionText').value.trim();
-  const answer = document.getElementById('editQuestionAnswer').value.trim();
-  const difficulty = document.querySelector('input[name="editDifficulty"]:checked').value;
-  const type = document.querySelector('input[name="editQuestionType"]:checked').value;
-  const url = type === 'url' ? document.getElementById('editQuestionUrl').value.trim() : '';
-  const messageDiv = document.getElementById('editQuestionMessage');
-  
-  if (!text || !answer) {
-    messageDiv.innerHTML = '<div class="error-msg">❌ Soru ve cevap alanları zorunludur!</div>';
-    return;
-  }
-  
-  if (type === 'url' && !url) {
-    messageDiv.innerHTML = '<div class="error-msg">❌ URL'li soru için resim URL'si gereklidir!</div>';
-    return;
-  }
-  
-  try {
-    const questionRef = window.firebaseRef(window.firebaseDB, `questions/${currentEditingQuestionId}`);
-    
-    const questionData = {
-      q: text,
-      a: answer,
-      diff: difficulty,
-      type: type,
-      updatedAt: new Date().toISOString()
-    };
-    
-    if (url) {
-      questionData.url = url;
-    }
-    
-    await window.firebaseSet(questionRef, questionData);
-    
-    messageDiv.innerHTML = '<div class="success-msg">✅ Soru başarıyla güncellendi!</div>';
-    
-    await loadQuestionsFromFirebase();
-    
-    setTimeout(() => {
-      go('manageQuestions');
-      displayQuestions();
-    }, 1500);
-    
-  } catch (error) {
-    console.error('Soru güncellenirken hata:', error);
-    messageDiv.innerHTML = '<div class="error-msg">❌ Soru güncellenirken bir hata oluştu!</div>';
-  }
-}
-
-// Soru silme
-async function deleteQuestion(questionId) {
-  if (!confirm('Bu soruyu silmek istediğinizden emin misiniz?')) {
-    return;
-  }
-  
-  try {
-    const questionRef = window.firebaseRef(window.firebaseDB, `questions/${questionId}`);
-    await window.firebaseRemove(questionRef);
-    
-    await loadQuestionsFromFirebase();
-    updateAdminStats();
-    displayQuestions(document.getElementById('questionFilter').value);
-    
-    alert('✅ Soru başarıyla silindi!');
-    
-  } catch (error) {
-    console.error('Soru silinirken hata:', error);
-    alert('❌ Soru silinirken bir hata oluştu!');
-  }
-}
-
-// Ekran geçişi
-function go(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  
-  if(id==="home") updateHomeScreen();
-  if(id==="leaderboard") updateLeaderboard();
-  if(id==="stats") updateStats();
-  if(id==="adminPanel") updateAdminStats();
-  if(id==="manageQuestions") displayQuestions();
-}
-
-// Zorlukla başlat
-function startWithDifficulty(diff){
-  gameState.difficulty = diff;
-  go('game');
-  startGame();
-}
-
-// Ana ekran güncelle
-function updateHomeScreen(){
-  document.getElementById('totalScore').innerText = gameState.totalScore;
-  document.getElementById('highStreak').innerText = gameState.highStreak;
-}
-
-// Oyunu başlat
-function startGame(){
-  gameState.money = 0;
-  gameState.currentStreak = 0;
-  gameState.questionNumber = 1;
-  usedQuestions = [];
-  updateDisplay();
-  newQuestion();
-  if(gameState.timerEnabled) startTimer();
-}
-
-// Oyunu bitir
-function endGame(){
-  stopTimer();
-  saveScore();
-  go('home');
-}
-
-// Skor kaydet
-function saveScore(){
-  gameState.totalScore += gameState.money;
-  if(gameState.currentStreak > gameState.highStreak){
-    gameState.highStreak = gameState.currentStreak;
-    localStorage.setItem('highStreak', gameState.highStreak);
-  }
-  localStorage.setItem('totalScore', gameState.totalScore);
-  
-  let leaders = JSON.parse(localStorage.getItem('leaderboard') || '[]');
-  leaders.push({
-    score: gameState.money,
-    streak: gameState.currentStreak,
-    difficulty: gameState.difficulty,
-    date: new Date().toLocaleDateString('tr-TR')
-  });
-  leaders.sort((a,b) => b.score - a.score);
-  leaders = leaders.slice(0, 10);
-  localStorage.setItem('leaderboard', JSON.stringify(leaders));
-}
-
-// Lider tablosunu güncelle
-function updateLeaderboard(){
-  let leaders = JSON.parse(localStorage.getItem('leaderboard') || '[]');
-  let html = '';
-  if(leaders.length === 0){
-    html = '<p style="text-align:center;color:#94a3b8;">Henüz kayıt yok</p>';
-  } else {
-    leaders.forEach((l, i) => {
-      html += `<div class="leader-item">
-        <span>${i+1}. ${l.difficulty} - ${l.date}</span>
-        <span>💰${l.score} 🔥${l.streak}</span>
-      </div>`;
-    });
-  }
-  document.getElementById('leaderList').innerHTML = html;
-}
-
-// İstatistikleri güncelle
-function updateStats(){
-  let s = gameState.stats;
-  let total = s.dogru + s.yanlis;
-  let oran = total > 0 ? Math.round((s.dogru / total) * 100) : 0;
-  let html = `
-    <div class="stat-row"><span>Toplam Soru:</span><span>${total}</span></div>
-    <div class="stat-row"><span>Doğru:</span><span style="color:#22c55e">✅ ${s.dogru}</span></div>
-    <div class="stat-row"><span>Yanlış:</span><span style="color:#ef4444">❌ ${s.yanlis}</span></div>
-    <div class="stat-row"><span>Başarı Oranı:</span><span style="color:#38bdf8"><b>%${oran}</b></span></div>
-  `;
-  document.getElementById('categoryStats').innerHTML = html;
-}
-
-// İstatistikleri sıfırla
-function resetStats(){
-  if(confirm('Tüm istatistikler silinecek. Emin misiniz?')){
-    localStorage.clear();
-    gameState.totalScore = 0;
-    gameState.highStreak = 0;
-    gameState.stats = {dogru:0, yanlis:0};
-    updateStats();
-    updateHomeScreen();
-    alert('İstatistikler sıfırlandı!');
-  }
-}
-
-// Zamanlayıcı
-function startTimer(){
-  gameState.timeLeft = gameState.difficulty === 'kolay' ? 30 : gameState.difficulty === 'orta' ? 20 : 15;
-  updateTimer();
-  gameState.timerInterval = setInterval(()=>{
-    gameState.timeLeft--;
-    updateTimer();
-    if(gameState.timeLeft <= 0){
-      stopTimer();
-      document.getElementById("result").innerHTML = "⏰ Süre Doldu!<br>✅ Doğru: " + current.a;
-      gameState.currentStreak = 0;
-      gameState.stats.yanlis++;
-      localStorage.setItem('stats', JSON.stringify(gameState.stats));
-      updateDisplay();
-      setTimeout(()=>{
-        if(gameState.questionNumber >= gameState.maxQuestions){
-          endGame();
-        } else {
-          gameState.questionNumber++;
-          newQuestion();
-          if(gameState.timerEnabled) startTimer();
-        }
-      }, 2000);
-    }
-  }, 1000);
-}
-
-function stopTimer(){
-  if(gameState.timerInterval){
-    clearInterval(gameState.timerInterval);
-    gameState.timerInterval = null;
-  }
-}
-
-function updateTimer(){
-  let color = gameState.timeLeft > 10 ? '#22c55e' : gameState.timeLeft > 5 ? '#f59e0b' : '#ef4444';
-  document.getElementById("timer").innerHTML = `⏱ ${gameState.timeLeft}`;
-  document.getElementById("timer").style.color = color;
-}
-
-function toggleTimer(){
-  gameState.timerEnabled = !gameState.timerEnabled;
-  document.getElementById("timerStatus").innerText = gameState.timerEnabled ? "Açık" : "Kapalı";
-}
-
-// Ekran güncelleme
-function updateDisplay(){
-  document.getElementById("money").innerText = "💰 " + gameState.money;
-  document.getElementById("streak").innerText = "🔥 " + gameState.currentStreak;
-  document.getElementById("questionCount").innerText = gameState.questionNumber + "/10";
-  document.getElementById("mode").innerText = "Karışık";
-  
-  let badge = document.getElementById("difficultyDisplay");
-  badge.innerText = gameState.difficulty.charAt(0).toUpperCase() + gameState.difficulty.slice(1);
-  badge.className = "difficulty-badge " + (gameState.difficulty === 'kolay' ? 'easy' : gameState.difficulty === 'orta' ? 'medium' : 'hard');
-}
-
-// Rastgele sayı
-function rand(min,max){
-  return Math.floor(Math.random()*(max-min+1))+min;
-}
-
-// Soru üretimi
-function newQuestion(){
-  updateDisplay();
-  
-  // Zorluk seviyesine göre filtrele
-  let filtered = questionPool.filter(q => {
-    if(gameState.difficulty === 'kolay') return q.diff === 'kolay';
-    if(gameState.difficulty === 'orta') return q.diff === 'kolay' || q.diff === 'orta';
-    return true;
-  });
-  
-  // Kullanılmamış soruları al
-  let available = filtered.filter((q, i) => !usedQuestions.includes(filtered.indexOf(q)));
-  
-  if(available.length === 0){
-    usedQuestions = [];
-    available = filtered;
-  }
-  
-  let randomQ = available[rand(0, available.length - 1)];
-  let originalIndex = filtered.indexOf(randomQ);
-  usedQuestions.push(originalIndex);
-  
-  current = {q: randomQ.q, a: randomQ.a, url: randomQ.url};
-  showQuestion();
-}
-
-function showQuestion(){
-  let questionHTML = current.q;
-  
-  // URL'li soru ise resmi göster
-  if (current.url) {
-    questionHTML = `<img src="${current.url}" style="max-width:100%;border-radius:10px;margin-bottom:15px;" alt="Soru görseli"><br>${current.q}`;
-  }
-  
-  document.getElementById("question").innerHTML = questionHTML;
-  document.getElementById("answer").value="";
-  document.getElementById("result").innerText="";
-  document.getElementById("answer").focus();
-}
-
-// Kullanıcı cevabını normalize et
-function norm(x){
-  return x.toLowerCase()
-    .replace(/ /g,'')
-    .replace(/ç/g,'c')
-    .replace(/ı/g,'i')
-    .replace(/ğ/g,'g')
-    .replace(/ö/g,'o')
-    .replace(/ş/g,'s')
-    .replace(/ü/g,'u')
-    .replace(/₂/g,'2')
-    .replace(/₃/g,'3')
-    .replace(/₄/g,'4')
-    .replace(/₅/g,'5')
-    .replace(/₆/g,'6')
-    .replace(/₇/g,'7')
-    .replace(/₈/g,'8')
-    .trim();
-}
-
-// Cevabı kontrol et
-function check(){
-  let g = norm(document.getElementById("answer").value);
-  let cevap = norm(current.a);
-  
-  stopTimer();
-  
-  if(g === cevap){
-    gameState.money++;
-    gameState.currentStreak++;
-    document.getElementById("result").innerText="✅ Doğru!";
-    gameState.stats.dogru++;
-    localStorage.setItem('stats', JSON.stringify(gameState.stats));
-    
-    setTimeout(()=>{
-      if(gameState.questionNumber >= gameState.maxQuestions){
-        endGame();
-      } else {
-        gameState.questionNumber++;
-        newQuestion();
-        if(gameState.timerEnabled) startTimer();
-      }
-    }, 800);
-  } else {
-    gameState.currentStreak = 0;
-    document.getElementById("result").innerHTML = `❌ Yanlış<br>✅ Doğru: ${current.a}`;
-    gameState.stats.yanlis++;
-    localStorage.setItem('stats', JSON.stringify(gameState.stats));
-    
-    setTimeout(()=>{
-      if(gameState.questionNumber >= gameState.maxQuestions){
-        endGame();
-      } else {
-        gameState.questionNumber++;
-        newQuestion();
-        if(gameState.timerEnabled) startTimer();
-      }
-    }, 2000);
-  }
-  updateDisplay();
-}
-
-// İpucu
-function hint(){
-  if(gameState.money < 5){
-    alert("Yetersiz para! İpucu için en az 5 puan gerekli.");
-    return;
-  }
-  gameState.money -= 5;
-  document.getElementById("money").innerText = "💰 " + gameState.money;
-  document.getElementById("result").innerText = "💡 Cevap: " + current.a;
-}
-
-// Sayfa yüklendiğinde
-window.onload = function(){
-  updateHomeScreen();
-  
-  // Admin oturumu kontrolü
-  if (sessionStorage.getItem('isAdmin') === 'true') {
-    gameState.isAdmin = true;
-  }
-};
-</script>
-
-</body>
-</html>
+    errorDiv.inn
