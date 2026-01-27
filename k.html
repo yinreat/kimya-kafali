@@ -556,8 +556,6 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Soruları yükle
-window.loadQuestionsFromFirebase();
 
 </script>
 
@@ -1284,6 +1282,9 @@ window.onload = function(){
     gameState.isAdmin = true;
   }
 };
+  window.addEventListener("load", () => {
+  loadQuestionsFromFirebase();
+});
 </script>
 
 </body>
