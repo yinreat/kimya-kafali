@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kimya Oyunu - Alkan, Alken, Alkin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Ana Sayfa */
+        .home-screen {
+            text-align: center;
+        }
+
+        .home-screen h2 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        /* Giriş ve Kayıt Formları */
+        .auth-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .error-message {
+            color: #f5576c;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .success-message {
+            color: #4facfe;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .link-text {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-top: 15px;
+            display: inline-block;
+        }
+
+        /* Oyun Ekranı */
+        .game-screen {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .score {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .question-container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .question-image {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            margin: 20px auto;
+            display: block;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .option-btn {
+            padding: 20px;
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option-btn:hover {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+
+        .option-btn.correct {
+            border-color: #4facfe;
+            background: #e0f7ff;
+        }
+
+        .option-btn.wrong {
+            border-color: #f5576c;
+            background: #ffe0e0;
+        }
+
+        /* Liderlik Tablosu */
+        .leaderboard {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: transform 0.3s;
+        }
+
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+        }
+
+        .rank {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-right: 20px;
+            color: #667eea;
+            min-width: 40px;
+        }
+
+        .rank.gold { color: #FFD700; }
+        .rank.silver { color: #C0C0C0; }
+        .rank.bronze { color: #CD7F32; }
+
+        .player-name {
+            flex-grow: 1;
+            font-size: 1.2em;
+        }
+
+        .player-score {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #764ba2;
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .admin-form {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .admin-form h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .question-list {
+            margin-top: 30px;
+        }
+
+        .question-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #ddd;
+        }
+
+        .question-item h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .delete-btn {
+            background: #f5576c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: #ddd;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #f5576c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Kimya Oyunu</h1>
+            <p>Alkan, Alken ve Alkin Bilginizi Test Edin!</p>
+        </div>
+
+        <div class="content">
+            <!-- Ana Sayfa -->
+            <div id="homeScreen" class="home-screen">
+                <h2>Hoş Geldiniz!</h2>
+                <p style="margin-bottom: 30px; font-size: 1.1em; color: #666;">Organik kimya bilginizi test etmeye hazır mısınız?</p>
+                <button class="btn" onclick="showScreen('loginScreen')">🎮 Oyna</button>
+                <button class="btn btn-secondary" onclick="showScreen('leaderboardScreen')">🏆 Liderlik Tablosu</button>
+                <button class="btn btn-success" onclick="showScreen('adminLoginScreen')">👨‍💼 Admin Girişi</button>
+            </div>
+
+            <!-- Giriş Ekranı -->
+            <div id="loginScreen" class="auth-form hidden">
+                <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">Giriş Yap</h2>
+                <form id="loginForm" onsubmit="loginUser(event)">
+                    <div class="form-group">
+                        <label for="loginEmail">E-posta:</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Şifre:</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <div id="loginError" class="error-message"></div>
+                    <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">Giriş Yap</button>
+                </form>
+                <p style="text-align: center; margin-top: 20px;">
+                    Hesabınız yok mu? <span class="link-text" onclick="showScreen('registerScreen')">Kayıt Ol</span>
+                </p>
+                <p style="text-align: center; margin-top: 10px;">
+                    <span class="link-text" onclick="showScreen('homeScreen')">Ana Sayfaya Dön</span>
+                </p>
+            </div>
+
+            <!-- Kayıt Ekranı -->
+            <div id="registerScreen" class="auth-form hidden">
+                <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">Kayıt Ol</h2>
+                <form id="registerForm" onsubmit="registerUser(event)">
+                    <div class="form-group">
+                        <label for="registerName">Adınız:</label>
+                        <input type="text" id="registerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">E-posta:</label>
+                        <input type="email" id="registerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Şifre:</label>
+                        <input type="password" id="registerPassword" required minlength="6">
+                    </div>
+                    <div id="registerError" class="error-message"></div>
+                    <div id="registerSuccess" class="success-message"></div>
+                    <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">Kayıt Ol</button>
+                </form>
+                <p style="text-align: center; margin-top: 20px;">
+                    Zaten hesabınız var mı? <span class="link-text" onclick="showScreen('loginScreen')">Giriş Yap</span>
+                </p>
+                <p style="text-align: center; margin-top: 10px;">
+                    <span class="link-text" onclick="showScreen('homeScreen')">Ana Sayfaya Dön</span>
+                </p>
+            </div>
+
+            <!-- Admin Giriş -->
+            <div id="adminLoginScreen" class="auth-form hidden">
+                <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">Admin Girişi</h2>
+                <form id="adminLoginForm" onsubmit="adminLogin(event)">
+                    <div class="form-group">
+                        <label for="adminEmail">Admin E-posta:</label>
+                        <input type="email" id="adminEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Admin Şifre:</label>
+                        <input type="password" id="adminPassword" required>
+                    </div>
+                    <div id="adminLoginError" class="error-message"></div>
+                    <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">Admin Girişi</button>
+                </form>
+                <p style="text-align: center; margin-top: 20px;">
+                    <span class="link-text" onclick="showScreen('homeScreen')">Ana Sayfaya Dön</span>
+                </p>
+            </div>
+
+            <!-- Oyun Ekranı -->
+            <div id="gameScreen" class="game-screen hidden">
+                <div class="game-header">
+                    <div class="score">Doğru: <span id="correctCount">0</span></div>
+                    <div class="score">Soru: <span id="currentQuestion">1</span>/10</div>
+                    <button class="btn" onclick="endGame()" style="padding: 10px 20px; margin: 0;">Oyunu Bitir</button>
+                </div>
+
+                <div class="category-tabs">
+                    <button class="tab-btn active" id="alkanTab">Alkan</button>
+                    <button class="tab-btn" id="alkenTab">Alken</button>
+                    <button class="tab-btn" id="alkinTab">Alkin</button>
+                </div>
+
+                <div class="question-container">
+                    <div class="question-text" id="questionText">Soru yükleniyor...</div>
+                    <img id="questionImage" class="question-image hidden" src="" alt="Soru Görseli">
+                    <div class="options" id="optionsContainer"></div>
+                </div>
+            </div>
+
+            <!-- Liderlik Tablosu -->
+            <div id="leaderboardScreen" class="leaderboard hidden">
+                <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">🏆 Liderlik Tablosu</h2>
+                <div id="leaderboardList"></div>
+                <button class="btn" onclick="showScreen('homeScreen')" style="display: block; margin: 30px auto 0;">Ana Sayfaya Dön</button>
+            </div>
+
+            <!-- Admin Panel -->
+            <div id="adminPanel" class="admin-panel hidden" style="position: relative;">
+                <button class="logout-btn" onclick="logoutAdmin()">Çıkış Yap</button>
+                <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">Admin Paneli</h2>
+                
+                <div class="admin-form">
+                    <h3>Yeni Soru Ekle</h3>
+                    <form id="addQuestionForm" onsubmit="addQuestion(event)">
+                        <div class="form-group">
+                            <label for="questionCategory">Kategori:</label>
+                            <select id="questionCategory" required style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
+                                <option value="alkan">Alkan</option>
+                                <option value="alken">Alken</option>
+                                <option value="alkin">Alkin</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="questionTextInput">Soru Metni:</label>
+                            <input type="text" id="questionTextInput" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="questionImageInput">Görsel URL (Opsiyonel):</label>
+                            <input type="text" id="questionImageInput" placeholder="https://example.com/image.jpg">
+                        </div>
+                        <div class="form-group">
+                            <label for="option1">Seçenek 1:</label>
+                            <input type="text" id="option1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="option2">Seçenek 2:</label>
+                            <input type="text" id="option2" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="option3">Seçenek 3:</label>
+                            <input type="text" id="option3" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="option4">Seçenek 4:</label>
+                            <input type="text" id="option4" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="correctAnswer">Doğru Cevap (1-4):</label>
+                            <input type="number" id="correctAnswer" min="1" max="4" required>
+                        </div>
+                        <div id="addQuestionError" class="error-message"></div>
+                        <div id="addQuestionSuccess" class="success-message"></div>
+                        <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">Soru Ekle</button>
+                    </form>
+                </div>
+
+                <div class="question-list">
+                    <h3 style="color: #667eea; margin-bottom: 20px;">Mevcut Sorular</h3>
+                    <div class="category-tabs">
+                        <button class="tab-btn active" onclick="filterAdminQuestions('alkan')">Alkan</button>
+                        <button class="tab-btn" onclick="filterAdminQuestions('alken')">Alken</button>
+                        <button class="tab-btn" onclick="filterAdminQuestions('alkin')">Alkin</button>
+                    </div>
+                    <div id="adminQuestionsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK'ları -->
+    <!-- 🔥 BURAYA FIREBASE KONFIGURASYON KODLARINI EKLEYIN 🔥 -->
+    <script>
+ // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDRkoDX-DPq37CAH0LhCFxltNLJ9_Br1eo",
+  authDomain: "mesut-6b875.firebaseapp.com",
+  projectId: "mesut-6b875",
+  storageBucket: "mesut-6b875.firebasestorage.app",
+  messagingSenderId: "313346665608",
+  appId: "1:313346665608:web:6d19a363b01c5e5650433d",
+  measurementId: "G-DHVX2LLT3P"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+    </script>
+
+    <script>
+        // Global değişkenler
+        let currentUser = null;
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let questions = [];
+        let currentCategory = 'alkan';
+        let adminCurrentFilter = 'alkan';
+
+        // Örnek sorular (Firebase'den gelecek)
+        const sampleQuestions = {
+            alkan: [
+                {
+                    id: '1',
+                    text: 'CH₄ bileşiğinin adı nedir?',
+                    image: '',
+                    options: ['Metan', 'Etan', 'Propan', 'Bütan'],
+                    correct: 0,
+                    category: 'alkan'
+                },
+                {
+                    id: '2',
+                    text: 'C₂H₆ bileşiğinin adı nedir?',
+                    image: '',
+                    options: ['Metan', 'Etan', 'Propan', 'Bütan'],
+                    correct: 1,
+                    category: 'alkan'
+                }
+            ],
+            alken: [
+                {
+                    id: '3',
+                    text: 'C₂H₄ bileşiğinin adı nedir?',
+                    image: '',
+                    options: ['Eten', 'Etan', 'Etin', 'Metan'],
+                    correct: 0,
+                    category: 'alken'
+                }
+            ],
+            alkin: [
+                {
+                    id: '4',
+                    text: 'C₂H₂ bileşiğinin adı nedir?',
+                    image: '',
+                    options: ['Eten', 'Etan', 'Etin', 'Metan'],
+                    correct: 2,
+                    category: 'alkin'
+                }
+            ]
+        };
+
+        // Ekran gösterme fonksiyonu
+        function showScreen(screenId) {
+            const screens = ['homeScreen', 'loginScreen', 'registerScreen', 'adminLoginScreen', 'gameScreen', 'leaderboardScreen', 'adminPanel'];
+            screens.forEach(screen => {
+                document.getElementById(screen).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+
+            if (screenId === 'leaderboardScreen') {
+                loadLeaderboard();
+            }
+        }
+
+        // Kullanıcı kayıt
+        async function registerUser(event) {
+            event.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+
+            document.getElementById('registerError').textContent = '';
+            document.getElementById('registerSuccess').textContent = '';
+
+            try {
+                // 🔥 FIREBASE AUTH - KAYIT
+                // const userCredential = await window.firebaseAuth.createUserWithEmailAndPassword(window.auth, email, password);
+                // const user = userCredential.user;
+
+                // 🔥 FIREBASE FIRESTORE - KULLANICI BİLGİLERİNİ KAYDET
+                // await window.firebaseFirestore.setDoc(window.firebaseFirestore.doc(window.db, 'users', user.uid), {
+                //     name: name,
+                //     email: email,
+                //     bestScore: 0,
+                //     createdAt: new Date()
+                // });
+
+                // Geçici - Firebase olmadan
+                document.getElementById('registerSuccess').textContent = 'Kayıt başarılı! Giriş yapabilirsiniz.';
+                setTimeout(() => {
+                    showScreen('loginScreen');
+                }, 2000);
+
+            } catch (error) {
+                document.getElementById('registerError').textContent = 'Kayıt hatası: ' + error.message;
+            }
+        }
+
+        // Kullanıcı girişi
+        async function loginUser(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            document.getElementById('loginError').textContent = '';
+
+            try {
+                // 🔥 FIREBASE AUTH - GİRİŞ
+                // const userCredential = await window.firebaseAuth.signInWithEmailAndPassword(window.auth, email, password);
+                // currentUser = userCredential.user;
+
+                // 🔥 FIREBASE FIRESTORE - KULLANICI BİLGİLERİNİ AL
+                // const userDoc = await window.firebaseFirestore.getDoc(window.firebaseFirestore.doc(window.db, 'users', currentUser.uid));
+                // const userData = userDoc.data();
+
+                // Geçici - Firebase olmadan
+                currentUser = { email: email, displayName: 'Test Kullanıcı' };
+                startGame();
+
+            } catch (error) {
+                document.getElementById('loginError').textContent = 'Giriş hatası: ' + error.message;
+            }
+        }
+
+        // Admin girişi
+        async function adminLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+
+            document.getElementById('adminLoginError').textContent = '';
+
+            // Basit admin kontrolü (gerçek uygulamada Firebase Custom Claims kullanın)
+            if (email === 'admin@kimya.com' && password === 'admin123') {
+                showScreen('adminPanel');
+                loadAdminQuestions();
+            } else {
+                document.getElementById('adminLoginError').textContent = 'Geçersiz admin bilgileri!';
+            }
+        }
+
+        // Admin çıkışı
+        function logoutAdmin() {
+            showScreen('homeScreen');
+        }
+
+        // Oyunu başlat
+        async function startGame() {
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            currentCategory = 'alkan';
+
+            // 🔥 FIREBASE FIRESTORE - SORULARI ÇEKER
+            // const questionsRef = window.firebaseFirestore.collection(window.db, 'questions');
+            // const q = window.firebaseFirestore.query(questionsRef, window.firebaseFirestore.where('category', '==', currentCategory));
+            // const querySnapshot = await window.firebaseFirestore.getDocs(q);
+            // questions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // Geçici - örnek sorularla
+            questions = [...sampleQuestions[currentCategory]];
+            
+            showScreen('gameScreen');
+            loadQuestion();
+        }
+
+        // Soru yükle
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length || currentQuestionIndex >= 10) {
+                endGame();
+                return;
+            }
+
+            const question = questions[currentQuestionIndex];
+            document.getElementById('questionText').textContent = question.text;
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('correctCount').textContent = correctAnswers;
+
+            // Görsel varsa göster
+            const imageEl = document.getElementById('questionImage');
+            if (question.image && question.image.trim() !== '') {
+                imageEl.src = question.image;
+                imageEl.classList.remove('hidden');
+            } else {
+                imageEl.classList.add('hidden');
+            }
+
+            // Seçenekleri oluştur
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(index);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // Cevap kontrolü
+        function checkAnswer(selectedIndex) {
+            const question = questions[currentQuestionIndex];
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            if (selectedIndex === question.correct) {
+                buttons[selectedIndex].classList.add('correct');
+                correctAnswers++;
+                document.getElementById('correctCount').textContent = correctAnswers;
+            } else {
+                buttons[selectedIndex].classList.add('wrong');
+                buttons[question.correct].classList.add('correct');
+            }
+
+            // Tüm butonları devre dışı bırak
+            buttons.forEach(btn => btn.disabled = true);
+
+            // Sonraki soruya geç
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        // Oyunu bitir
+        async function endGame() {
+            // 🔥 FIREBASE FIRESTORE - SKORU KAYDET
+            // if (currentUser) {
+            //     const userRef = window.firebaseFirestore.doc(window.db, 'users', currentUser.uid);
+            //     const userDoc = await window.firebaseFirestore.getDoc(userRef);
+            //     const currentBest = userDoc.data().bestScore || 0;
+            //     
+            //     if (correctAnswers > currentBest) {
+            //         await window.firebaseFirestore.setDoc(userRef, { bestScore: correctAnswers }, { merge: true });
+            //     }
+            // }
+
+            alert(`Oyun bitti! Toplam doğru cevap: ${correctAnswers}/10`);
+            showScreen('homeScreen');
+        }
+
+        // Liderlik tablosunu yükle
+        async function loadLeaderboard() {
+            // 🔥 FIREBASE FIRESTORE - LİDERLİK TABLOSU
+            // const usersRef = window.firebaseFirestore.collection(window.db, 'users');
+            // const q = window.firebaseFirestore.query(usersRef, 
+            //     window.firebaseFirestore.orderBy('bestScore', 'desc'), 
+            //     window.firebaseFirestore.limit(10)
+            // );
+            // const querySnapshot = await window.firebaseFirestore.getDocs(q);
+
+            const leaderboardList = document.getElementById('leaderboardList');
+            leaderboardList.innerHTML = '';
+
+            // Geçici - örnek veri
+            const sampleLeaderboard = [
+                { name: 'Ahmet Yılmaz', bestScore: 10 },
+                { name: 'Mehmet Kaya', bestScore: 9 },
+                { name: 'Ayşe Demir', bestScore: 8 },
+                { name: 'Fatma Şahin', bestScore: 7 },
+                { name: 'Ali Çelik', bestScore: 6 }
+            ];
+
+            sampleLeaderboard.forEach((user, index) => {
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item';
+                
+                let rankClass = '';
+                if (index === 0) rankClass = 'gold';
+                else if (index === 1) rankClass = 'silver';
+                else if (index === 2) rankClass = 'bronze';
+
+                item.innerHTML = `
+                    <div class="rank ${rankClass}">${index + 1}.</div>
+                    <div class="player-name">${user.name}</div>
+                    <div class="player-score">${user.bestScore} doğru</div>
+                `;
+                leaderboardList.appendChild(item);
+            });
+        }
+
+        // Admin - Soru ekle
+        async function addQuestion(event) {
+            event.preventDefault();
+            
+            const category = document.getElementById('questionCategory').value;
+            const text = document.getElementById('questionTextInput').value;
+            const image = document.getElementById('questionImageInput').value;
+            const options = [
+                document.getElementById('option1').value,
+                document.getElementById('option2').value,
+                document.getElementById('option3').value,
+                document.getElementById('option4').value
+            ];
+            const correct = parseInt(document.getElementById('correctAnswer').value) - 1;
+
+            document.getElementById('addQuestionError').textContent = '';
+            document.getElementById('addQuestionSuccess').textContent = '';
+
+            try {
+                // 🔥 FIREBASE FIRESTORE - SORU EKLE
+                // await window.firebaseFirestore.addDoc(window.firebaseFirestore.collection(window.db, 'questions'), {
+                //     category: category,
+                //     text: text,
+                //     image: image,
+                //     options: options,
+                //     correct: correct,
+                //     createdAt: new Date()
+                // });
+
+                document.getElementById('addQuestionSuccess').textContent = 'Soru başarıyla eklendi!';
+                document.getElementById('addQuestionForm').reset();
+                loadAdminQuestions();
+
+            } catch (error) {
+                document.getElementById('addQuestionError').textContent = 'Soru eklenirken hata: ' + error.message;
+            }
+        }
+
+        // Admin - Soruları yükle
+        async function loadAdminQuestions() {
+            // 🔥 FIREBASE FIRESTORE - TÜM SORULARI ÇEK
+            // const questionsRef = window.firebaseFirestore.collection(window.db, 'questions');
+            // const querySnapshot = await window.firebaseFirestore.getDocs(questionsRef);
+            // const allQuestions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            const adminQuestionsList = document.getElementById('adminQuestionsList');
+            adminQuestionsList.innerHTML = '';
+
+            // Geçici - örnek sorular
+            const allQuestions = [...sampleQuestions.alkan, ...sampleQuestions.alken, ...sampleQuestions.alkin];
+            const filteredQuestions = allQuestions.filter(q => q.category === adminCurrentFilter);
+
+            filteredQuestions.forEach(question => {
+                const item = document.createElement('div');
+                item.className = 'question-item';
+                item.innerHTML = `
+                    <h4>${question.text}</h4>
+                    <p><strong>Kategori:</strong> ${question.category.toUpperCase()}</p>
+                    <p><strong>Seçenekler:</strong> ${question.options.join(', ')}</p>
+                    <p><strong>Doğru Cevap:</strong> ${question.options[question.correct]}</p>
+                    ${question.image ? `<img src="${question.image}" style="max-width: 200px; margin-top: 10px; border-radius: 5px;">` : ''}
+                    <button class="delete-btn" onclick="deleteQuestion('${question.id}')">Sil</button>
+                `;
+                adminQuestionsList.appendChild(item);
+            });
+        }
+
+        // Admin - Soru filtrele
+        function filterAdminQuestions(category) {
+            adminCurrentFilter = category;
+            const tabs = document.querySelectorAll('#adminPanel .tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            loadAdminQuestions();
+        }
+
+        // Admin - Soru sil
+        async function deleteQuestion(questionId) {
+            if (!confirm('Bu soruyu silmek istediğinizden emin misiniz?')) return;
+
+            try {
+                // 🔥 FIREBASE FIRESTORE - SORU SİL
+                // await window.firebaseFirestore.deleteDoc(window.firebaseFirestore.doc(window.db, 'questions', questionId));
+                
+                alert('Soru silindi!');
+                loadAdminQuestions();
+
+            } catch (error) {
+                alert('Soru silinirken hata: ' + error.message);
+            }
+        }
+
+        // Sayfa yüklendiğinde
+        window.onload = function() {
+            showScreen('homeScreen');
+        };
+    </script>
+</body>
+</html>
